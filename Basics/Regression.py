@@ -4,6 +4,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 import seaborn as sns
 from sklearn.model_selection import train_test_split
+from torchsummary import summary
 sns.set(color_codes=True)
 
 
@@ -57,6 +58,7 @@ if __name__ == '__main__':
     inputs, targets = inputs.view((-1, 1)), targets.view((-1, 1))
     # mymodel = Linear_regression(1, 1000, 1)
     mymodel = regression(1, 1000, 1000, 1)
+    summary(mymodel, (1, 1))
     criterian = nn.MSELoss()
     optimizer = torch.optim.Adam(mymodel.parameters())
 
