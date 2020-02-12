@@ -14,6 +14,8 @@ sns.set(color_codes=True)
 
 batch_size = 128
 num_epochs = 100
+learning_rate = 0.001
+load = True
 
 # load the dataset
 training_dataset = torchvision.datasets.MNIST(root="../datasets/",
@@ -39,37 +41,74 @@ class FFNN(nn.Module):
     def __init__(self, input_dim, hidden_layers, num_classes):
         super(FFNN, self).__init__()
         self.fc1 = nn.Linear(input_dim, hidden_layers[0])
-        self.Relu = nn.ReLU()
+        self.Relu1 = nn.ReLU()
         self.fc2 = nn.Linear(hidden_layers[0], hidden_layers[1])
+        self.Relu2 = nn.ReLU()
         self.fc3 = nn.Linear(hidden_layers[1], hidden_layers[2])
+        self.Relu3 = nn.ReLU()
         self.fc4 = nn.Linear(hidden_layers[2], num_classes)
 
     def forward(self, x):
         out = self.fc1(x)
-        out = self.Relu(out)
+        out = self.Relu1(out)
         out = self.fc2(out)
-        out = self.Relu(out)
+        out = self.Relu2(out)
         out = self.fc3(out)
-        out = self.Relu(out)
+        out = self.Relu3(out)
         out = self.fc4(out)
         return out
+
+def save_model(path, stuff):
+    torch.save(stuff, path + "/checkpoint.pt")
+
+
+def load_model(path):
+    return torch.load(path + "/checkpoint.pt")
 
 
 if __name__ == '__main__':
     writer = SummaryWriter("save/")
     mymodel = FFNN(28*28, [1000, 1000, 1000], 10)
-    criterian = nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(mymodel.parameters())
+    criterion = nn.CrossEntropyLoss()
+    optimizer = torch.optim.Adam(mymodel.parameters(), lr=learning_rate)
+    start_epoch = 0
 
-    for epoch in range(num_epochs):
-        for (images, labels) in train_loader:
+    # loading the model if present
+    if load == True:
+        save_dict = load_model("save")
+        optimizer.load_state_dict(save_dict["optimizer_state_dict"])
+        mymodel.load_state_dict(save_dict["model_state_dict"])
+        start_epoch = save_dict["epoch"]
+        loss = save_dict["loss"]
+
+    dataiter = iter(train_loader)
+    images, labels = dataiter.next()
+    img_grid = torchvision.utils.make_grid(images[0][0])
+    plt.imshow(images[0][0])
+    writer.add_image("Test image", img_grid)
+
+    for epoch in range(start_epoch+1, num_epochs):
+        for i, (images, labels) in enumerate(train_loader):
+
+            # Forward pass
             images = images.reshape((-1, 28*28))
             predictions = mymodel(images)
-            print(predictions)
-            loss = criterian(labels, predictions)
+            loss = criterion(predictions, labels)
+            writer.add_graph(mymodel, images)
+            writer.add_scalar("training loss", loss.item(), i)
 
+            # Backward pass
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
 
-            print("The loss on epoch %d/%d"%(epoch, num_epochs))
+            print("The loss on epoch %d/%d: %.2f"%(epoch, num_epochs, loss))
+
+        # Saving the model
+        save_model("save", {
+            "model_state_dict": mymodel.state_dict(),
+            "optimizer_state_dict": optimizer.state_dict(),
+            "epoch": epoch,
+            "loss": loss
+        })
+
