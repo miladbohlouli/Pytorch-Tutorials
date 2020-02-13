@@ -1,13 +1,11 @@
 import torch
 import torch.nn as nn
-import numpy as np
 from matplotlib import pyplot as plt
 import seaborn as sns
 from sklearn.model_selection import train_test_split
 import torchvision
 from torchvision import transforms
-from torchsummary import summary
-from torch.utils.tensorboard import SummaryWriter
+import torch.utils.tensorboard
 from torch.utils import data
 import os
 sns.set(color_codes=True)
@@ -43,19 +41,11 @@ class FFNN(nn.Module):
         self.fc1 = nn.Linear(input_dim, hidden_layers[0])
         self.Relu1 = nn.ReLU()
         self.fc2 = nn.Linear(hidden_layers[0], hidden_layers[1])
-        self.Relu2 = nn.ReLU()
-        self.fc3 = nn.Linear(hidden_layers[1], hidden_layers[2])
-        self.Relu3 = nn.ReLU()
-        self.fc4 = nn.Linear(hidden_layers[2], num_classes)
 
     def forward(self, x):
         out = self.fc1(x)
         out = self.Relu1(out)
         out = self.fc2(out)
-        out = self.Relu2(out)
-        out = self.fc3(out)
-        out = self.Relu3(out)
-        out = self.fc4(out)
         return out
 
 def save_model(path, stuff):
@@ -71,6 +61,7 @@ if __name__ == '__main__':
     mymodel = FFNN(28*28, [1000, 1000, 1000], 10)
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(mymodel.parameters(), lr=learning_rate)
+
     start_epoch = 0
 
     # loading the model if present
@@ -78,16 +69,17 @@ if __name__ == '__main__':
         save_dict = load_model("save")
         optimizer.load_state_dict(save_dict["optimizer_state_dict"])
         mymodel.load_state_dict(save_dict["model_state_dict"])
-        start_epoch = save_dict["epoch"]
+        start_epoch = save_dict["epoch"] + 1
         loss = save_dict["loss"]
 
     dataiter = iter(train_loader)
     images, labels = dataiter.next()
+    summary(mymodel, images.view(-1, 28*28).size())
     img_grid = torchvision.utils.make_grid(images[0][0])
     plt.imshow(images[0][0])
     writer.add_image("Test image", img_grid)
 
-    for epoch in range(start_epoch+1, num_epochs):
+    for epoch in range(start_epoch, num_epochs):
         for i, (images, labels) in enumerate(train_loader):
 
             # Forward pass
@@ -95,7 +87,7 @@ if __name__ == '__main__':
             predictions = mymodel(images)
             loss = criterion(predictions, labels)
             writer.add_graph(mymodel, images)
-            writer.add_scalar("training loss", loss.item(), i)
+            writer.add_scalar("training loss", loss.item(), epoch)
 
             # Backward pass
             optimizer.zero_grad()
