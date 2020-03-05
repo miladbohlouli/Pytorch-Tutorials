@@ -34,7 +34,7 @@ test_loader = data.DataLoader(test_dataset,
 
 
 def save_model(path, dict):
-    torch.save(dict, path + "RNN_checkpoint+.pt")
+    torch.save(dict, path + "RNN_checkpoint.pt")
 
 
 def load_model(path):
@@ -90,10 +90,11 @@ if __name__ == '__main__':
                 "loss":loss
             })
 
-            print("Epoch %d/%d---------loss:%.2f"%(epoch, epoch_num, loss))
+            print("\nEpoch %d/%d---------loss:%.2f"%(epoch+1, start_epoch + epoch_num, loss))
 
     # test the model
     model.eval()
+    print("------------------Testing the model------------------")
     with torch.no_grad():
         correct = 0
         total = 0
