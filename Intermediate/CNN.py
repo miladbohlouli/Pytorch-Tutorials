@@ -13,7 +13,6 @@ save_dir = "save/"
 learning_rate = 0.001
 load = True
 
-
 train_dataset = torchvision.datasets.MNIST("../datasets",
                                            train=True,
                                            transform=transforms.ToTensor(),
@@ -45,7 +44,7 @@ class CNN_module(nn.Module):
     def __init__(self, num_classes):
         super(CNN_module, self).__init__()
         self.layer1 = nn.Sequential(
-            nn.Conv2d(1, 16, kernel_size=5, stride=1, padding=2),
+            nn.Conv2d(1, 16, kernel_size=3, stride=1, padding=1),
             nn.BatchNorm2d(16),
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=2, stride=2),
@@ -68,6 +67,7 @@ class CNN_module(nn.Module):
 
 
 if __name__ == '__main__':
+
     model = CNN_module(num_classes=10)
     criterian = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
