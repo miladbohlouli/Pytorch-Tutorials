@@ -56,14 +56,13 @@ def load_model(saving_dir="./save"):
     return torch.load(saving_dir+"/flight_model.pt")
 
 
-
 # parameters definition
 batch_size = 4
-hidden_size = 128
+hidden_size = 256
 window_size = 12
-iterations = 10
+iterations = 300
 learning_rate = 0.001
-load = True
+load = False
 test_count = 20
 
 if __name__ == '__main__':

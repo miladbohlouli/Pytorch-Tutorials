@@ -11,6 +11,9 @@ from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 import os
 
+def init_weight(m):
+    if type(m) == nn.Linear:
+        nn.init.kaiming_normal(m.weight)
 
 # parameters
 LOG_DIR = "./logs"
@@ -20,7 +23,7 @@ batch_size = 16
 num_epochs = 3900
 noise_size = 100
 image_size = 8 * 8
-load = True
+load = False
 
 D = nn.Sequential(
     nn.Linear(image_size, hidden_size),
@@ -43,7 +46,7 @@ G = nn.Sequential(
 
 class mnist_dataset(Dataset):
     def __init__(self, images):
-        self.images = torch.from_numpy((images / 16).astype(np.float32))
+        self.images = torch.from_numpy((images/16).astype(np.float32))
 
     def __getitem__(self, index):
         return self.images[index]
@@ -72,9 +75,18 @@ def load_model(save_dir):
     return torch.load(os.path.join(save_dir, "checkpoint.pt"))
 
 if __name__ == '__main__':
+    print(os.environ["CUDA_VISIBLE_DEVICES"])
+
     MNIST = load_digits()
     fake_results = None
     start_epoch = 0
+
+    D.apply(init_weight)
+    G.apply(init_weight)
+
+    D.type(torch.FloatTensor)
+    G.type(torch.FloatTensor)
+
 
     # create the train and test dataset
     data = mnist_dataset(MNIST["data"])
@@ -93,7 +105,6 @@ if __name__ == '__main__':
         start_epoch = saving_dict["epoch"] + 1
 
     # generate the labels
-
     total_step = len(data_loader)
     for epoch in range(start_epoch, start_epoch + num_epochs):
         for i, real_images in enumerate(data_loader):
