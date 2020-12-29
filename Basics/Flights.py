@@ -119,6 +119,7 @@ if __name__ == '__main__':
             prediction.append(out.item())
 
     actual_predictions = (np.array(prediction[-test_count:]) * normalization[1]) + normalization[0]
+    # actual_predictions = np.array(prediction[-test_count:])
 
     plt.plot(list(range(test_count)), actual_predictions)
     plt.plot(list(range(test_count)), test_labels)

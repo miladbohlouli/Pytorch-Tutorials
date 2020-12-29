@@ -263,6 +263,8 @@ def main(args):
                                               fake_images[np.random.randint(0, x_train.shape[0], 5)].squeeze(1).
                                               reshape([-1, 1, int(args.image_size ** 0.5), int(args.image_size ** 0.5)]))
 
+
+
         with torch.no_grad():
             logger.debug("Evaluating the model")
             g.eval()
