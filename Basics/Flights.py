@@ -5,6 +5,7 @@ from torch import nn
 import seaborn as sns
 from matplotlib import pyplot as plt
 
+
 class flight_dataset(Dataset):
     def __init__(self, window_size=12, test_count=12):
         temp = sns.load_dataset("flights")["passengers"].values
@@ -21,8 +22,6 @@ class flight_dataset(Dataset):
         self.dataset = torch.from_numpy(np.stack(self.dataset, axis=0)).unsqueeze(-1)
 
         self.test = temp[-(test_count + window_size):-test_count]
-
-
 
     def __getitem__(self, item):
         return self.dataset[item], self.labels[item]
